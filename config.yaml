@@ -1,0 +1,49 @@
+# AI Quality CI Configuration
+
+# GitHub settings
+github:
+  max_files_per_review: 10
+  ignore_files:
+    - "*.md"
+    - "*.txt"
+    - "*.json"
+    - "tests/*"
+
+# Code analysis settings
+analysis:
+  style_checks:
+    - pylint
+    - black
+  max_line_length: 88
+  complexity_threshold: 10
+
+# AI review settings
+ai_review:
+  provider: "local"  # Options: local, openai, claude, deepseek
+  model: "orca-mini-3b-gguf2-q4_0.gguf"  # Model options per provider:
+  
+  # Available models per provider:
+  
+  # Local (GPT4All):
+  # - orca-mini-3b-gguf2-q4_0.gguf (default, ~2GB)
+  # - mistral-7b-instruct-v0.2.Q4_0.gguf (~4GB)
+  # - nous-hermes-llama2-13b.Q4_0.gguf (~8GB)
+  
+  # OpenAI:
+  # - gpt-4 (best quality)
+  # - gpt-3.5-turbo (faster)
+  
+  # Claude (Anthropic):
+  # - claude-3-opus-20240229 (best quality)
+  # - claude-3-sonnet-20240229 (balanced)
+  
+  # DeepSeek:
+  # - deepseek-coder-33b-instruct (best quality)
+  # - deepseek-coder-6.7b-instruct (faster)
+  
+  focus_areas:
+    - code_style
+    - best_practices
+    - documentation
+    - security
+    - performance

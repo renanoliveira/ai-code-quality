@@ -1,0 +1,71 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ai-code-review
+spec:
+  params:
+    - name: repo-url
+      type: string
+      description: Git repository URL
+    - name: branch-name
+      type: string
+      description: Branch to analyze
+      default: main
+    - name: path
+      type: string
+      description: Files to analyze
+      default: "."
+    - name: provider
+      type: string
+      description: AI provider to use
+      default: openai
+    - name: model
+      type: string
+      description: AI model to use
+      default: gpt-4
+    - name: language
+      type: string
+      description: Output language
+      default: en
+    - name: auto-apply
+      type: string
+      description: Auto-apply fixes
+      default: "false"
+  steps:
+    - name: git-clone
+      image: alpine/git
+      script: |
+        git clone $(params.repo-url) /workspace/source
+        cd /workspace/source
+        git checkout $(params.branch-name)
+    - name: code-review
+      image: ai-quality-ci:latest
+      env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-secrets
+              key: openai-key
+        - name: AZURE_OPENAI_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-secrets
+              key: azure-key
+        - name: AZURE_OPENAI_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: ai-secrets
+              key: azure-endpoint
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-secret
+              key: token
+      workingDir: /workspace/source
+      script: |
+        ai-quality-ci review-files \
+          --provider $(params.provider) \
+          --model $(params.model) \
+          --language $(params.language) \
+          --auto-apply $(params.auto-apply) \
+          $(params.path)

@@ -1,0 +1,52 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: ai-code-review-pipeline
+spec:
+  params:
+    - name: repo-url
+      type: string
+      description: Git repository URL
+    - name: branch-name
+      type: string
+      description: Branch to analyze
+      default: main
+    - name: path
+      type: string
+      description: Files to analyze
+      default: "."
+    - name: provider
+      type: string
+      description: AI provider to use
+      default: openai
+    - name: model
+      type: string
+      description: AI model to use
+      default: gpt-4
+    - name: language
+      type: string
+      description: Output language
+      default: en
+    - name: auto-apply
+      type: string
+      description: Auto-apply fixes
+      default: "false"
+  tasks:
+    - name: code-review
+      taskRef:
+        name: ai-code-review
+      params:
+        - name: repo-url
+          value: $(params.repo-url)
+        - name: branch-name
+          value: $(params.branch-name)
+        - name: path
+          value: $(params.path)
+        - name: provider
+          value: $(params.provider)
+        - name: model
+          value: $(params.model)
+        - name: language
+          value: $(params.language)
+        - name: auto-apply
+          value: $(params.auto-apply)

@@ -1,61 +1,77 @@
-"""Static code analysis using pylint."""
-
+from typing import Dict, List, Union
 import os
-import sys
-import json
-from typing import Dict, List, Optional
-from pylint.lint import Run
+from pylint import lint
 from pylint.reporters import JSONReporter
-from io import StringIO
+import tempfile
 
 class CodeAnalyzer:
-    """Static code analyzer using pylint."""
+    """Analyzes Python code for quality and style issues."""
     
-    def __init__(self):
-        """Initialize CodeAnalyzer."""
-        pass
+    def __init__(self, ignore_patterns: List[str] = None, pylint_config: str = None):
+        """Initialize code analyzer.
         
-    def analyze_file(self, file_path: str) -> List[Dict]:
+        Args:
+            ignore_patterns: List of glob patterns to ignore
+            pylint_config: Path to pylint config file
+        """
+        self.ignore_patterns = ignore_patterns or []
+        self.pylint_config = pylint_config
+    
+    def analyze_file(self, file_path: str) -> Dict:
         """Analyze a single Python file.
         
         Args:
-            file_path: Path to file to analyze
+            file_path: Path to Python file
             
         Returns:
-            List of analysis results
+            Dict with analysis results
         """
-        # Capture stdout to prevent pylint from printing to console
-        stdout = StringIO()
-        reporter = JSONReporter(stdout)
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found: {file_path}")
         
-        # Run pylint
-        Run([file_path], reporter=reporter, exit=False)
-        
-        # Parse results
-        output = stdout.getvalue()
-        if output:
+        # Create temporary file for pylint output
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json') as tmp:
+            args = ['--output-format=json', '--output=' + tmp.name]
+            
+            if self.pylint_config:
+                args.append('--rcfile=' + self.pylint_config)
+            
+            args.append(file_path)
+            
             try:
-                return json.loads(output)
-            except json.JSONDecodeError:
-                pass
-                
-        return []
+                lint.Run(args, exit=False)
+                tmp.seek(0)
+                issues = eval(tmp.read() or '[]')
+            except Exception as e:
+                issues = [{'message': f'Error analyzing file: {str(e)}'}]
         
-    def analyze_directory(self, directory: str) -> Dict[str, List[Dict]]:
-        """Analyze all Python files in directory.
+        # Process issues
+        style_issues = []
+        complexity = "Low"
+        
+        for issue in issues:
+            msg = issue.get('message', '')
+            if 'complexity' in msg.lower():
+                complexity = "High" if 'too high' in msg.lower() else "Medium"
+            style_issues.append(msg)
+        
+        return {
+            'style_issues': style_issues,
+            'complexity': complexity
+        }
+    
+    def analyze_files(self, files: List[str]) -> Dict[str, Dict]:
+        """Analyze multiple Python files.
         
         Args:
-            directory: Directory to analyze
+            files: List of file paths
             
         Returns:
-            Dictionary mapping file paths to analysis results
+            Dict mapping file paths to analysis results
         """
         results = {}
-        
-        for root, _, files in os.walk(directory):
-            for file in files:
-                if file.endswith(".py"):
-                    file_path = os.path.join(root, file)
-                    results[file_path] = self.analyze_file(file_path)
-                    
+        for file_path in files:
+            if any(pattern in file_path for pattern in self.ignore_patterns):
+                continue
+            results[file_path] = self.analyze_file(file_path)
         return results
