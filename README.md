@@ -1,57 +1,182 @@
-# AI Quality CI
+# AI Quality CI 🔍🤖
 
-A simple Python tool that combines Pylint with OpenAI to provide AI-powered code quality analysis and suggestions.
+**Python tool for AI-powered code quality analysis and review**  
+Integrates static analysis (Pylint) with language models (OpenAI/Azure) to provide:
+- Automatic detection of style issues and best practices
+- Intelligent code improvement suggestions
+- Automatic code fixes with commit generation
+- Multi-language support for reports
 
-## Features
+## Key Features 💡
 
-- Code quality analysis using Pylint
-- AI-powered code review suggestions using OpenAI
-- Command-line interface for analyzing Python files
+- **Code analysis** with Pylint
+- **AI review** using OpenAI GPT or Azure OpenAI
+- **Automatic fixes** with Git commit generation
+- **Intuitive CLI** with multiple configuration options
+- **Multi-language support** for reports (en, pt-BR, etc)
+- **Continuous integration** via GitHub Actions
 
-## Installation
+## Installation ⚙️
 
-1. Clone the repository
-2. Install dependencies:
 ```bash
+git clone https://github.com/your-username/ai-quality-ci.git
+cd ai-quality-ci
 pip install -r requirements.txt
 ```
 
-## Configuration
+## Configuration 🔧
 
-1. Set your OpenAI API key:
+### 🔑 OpenAI
 ```bash
-export OPENAI_API_KEY=your-api-key
+export OPENAI_API_KEY="your-openai-key"
 ```
 
-2. (Optional) Create a `config.yaml` file to customize settings:
+### 🔵 Azure OpenAI
+```bash
+export AZURE_OPENAI_ENDPOINT="your-endpoint"
+export AZURE_OPENAI_KEY="your-azure-key"
+```
+
+### ⚙️ Configuration File (Optional)
+Create `config.yaml` to customize:
 ```yaml
 ai_review:
-  model: gpt-3.5-turbo  # or gpt-4
+  model: gpt-4o          # Model to use
+  use_azure: false       # Use Azure OpenAI?
+  auto_apply: false      # Apply fixes automatically?
+  language: en           # Report language
 ```
 
-## Usage
+## Usage 🚀
 
-Review Python files:
+### Basic Analysis
 ```bash
-python -m ai_quality_ci review-files path/to/file1.py path/to/file2.py
+python -m ai_quality_ci review-files path/to/file.py
 ```
 
-Options:
-- `--model`: Specify OpenAI model (default: gpt-3.5-turbo)
+### Advanced Options:
+| Option         | Description                               | Default     |
+|----------------|------------------------------------------|-------------|
+| `--model`      | LLM model (gpt-4o, gpt-3.5, claude-3, etc) | gpt-4o     |
+| `--use-azure`  | Use Azure OpenAI                         | false       |
+| `--auto-apply` | Apply fixes automatically + commit        | false       |
+| `--language`   | Report language (en, pt-BR, es)          | en          |
 
-## Example Output
-
+### Practical Examples:
+**1. Analysis with Azure OpenAI:**
+```bash
+python -m ai_quality_ci review-files \
+  --use-azure \
+  --model gpt-4o \
+  mycode.py
 ```
-Analyzing example.py...
 
-Style Issues:
-- Consider using more descriptive variable names
-- Add docstrings to functions
+**2. Automatic Fix + Commit:**
+```bash
+python -m ai_quality_ci review-files \
+  --auto-apply \
+  --language pt-BR \
+  src/*.py
+```
 
-Code Improvements:
-- Use list comprehension instead of for loop
-- Consider adding error handling
+**3. Full Project Analysis:**
+```bash
+python -m ai_quality_ci review-files \
+  --model claude-3-sonnet \
+  --language en \
+  $(find . -name '*.py')
+```
 
-Documentation:
-- Add module-level docstring
-- Document function parameters
+## Example Output 📄
+```plaintext
+🔍 Analyzing algorithm.py...
+
+✅ Style Issues:
+- [Line 12] Generic variable name 'x'
+- [Line 5] Missing docstring in function calculate_metrics
+
+🚀 Code Improvements:
+- [Line 32] Replace loop with list comprehension
+- [Line 47] Missing exception handling
+
+📝 Documentation:
+- Add docstring explaining Regressor class parameters
+
+🔧 Automatically Applied Fixes:
+- Renamed 'x' to 'metrics_result' [Commit #a1b2c3d]
+- Added try/except for zero division handling [Commit #d4e5f6a]
+```
+
+## Auto Fix Example 🛠️
+
+Here's a practical example of how the auto fix feature works:
+
+### Original Code:
+```python
+def calculate_average(x):
+    total = 0
+    for i in range(len(x)):
+        total = total + x[i]
+    return total / len(x)
+```
+
+### AI Review Output:
+```plaintext
+🔍 Analyzing calculate_average function...
+
+✅ Style Issues:
+- Generic parameter name 'x'
+- Missing function docstring
+- Loop can be simplified
+
+🚀 Suggested Fixes:
+1. Add descriptive parameter name
+2. Add docstring
+3. Use sum() function
+4. Add error handling for empty list
+```
+
+### Auto-Applied Fixes:
+```python
+def calculate_average(numbers: list) -> float:
+    """Calculate the arithmetic mean of a list of numbers.
+    
+    Args:
+        numbers (list): List of numerical values
+        
+    Returns:
+        float: The arithmetic mean of the input list
+        
+    Raises:
+        ValueError: If the input list is empty
+    """
+    if not numbers:
+        raise ValueError("Cannot calculate average of empty list")
+    return sum(numbers) / len(numbers)
+```
+
+### Git Commit:
+```bash
+commit a1b2c3d4e5f6g7h8i9j0k
+Author: AI Quality CI <ai@quality.ci>
+Date: Fri Mar 21 11:32:27 2025 -0300
+
+refactor: Improve calculate_average function
+- Add type hints
+- Add comprehensive docstring
+- Use sum() for better readability
+- Add empty list validation
+- Rename parameter for clarity
+```
+
+The auto fix feature automatically:
+1. Analyzes the code for improvements
+2. Applies the suggested fixes
+3. Creates a Git commit with detailed changes
+4. Maintains code history and traceability
+
+## Contributing 🤝
+Contributions are welcome! See our [Contributing Guide](CONTRIBUTING.md).
+
+## License 📜
+MIT License - See [LICENSE](LICENSE) for details.
