@@ -178,5 +178,69 @@ The auto fix feature automatically:
 ## Contributing 🤝
 Contributions are welcome! See our [Contributing Guide](CONTRIBUTING.md).
 
+## CI Integration 🔄
+
+### Tekton Pipeline Integration
+
+AI Quality CI can be integrated into your CI/CD workflow using Tekton pipelines. The integration provides:
+
+- Automated code review in your CI pipeline
+- Secure handling of API credentials
+- Configurable parameters for all features
+- Support for both OpenAI and Azure OpenAI
+- Automatic fix commits in your repository
+
+### Quick Setup
+
+1. Build the Docker image:
+```bash
+docker build -t your-registry/ai-quality-ci:latest .
+docker push your-registry/ai-quality-ci:latest
+```
+
+2. Apply Tekton resources:
+```bash
+kubectl apply -f tekton/tasks/code-review-task.yaml
+kubectl apply -f tekton/pipelines/code-review-pipeline.yaml
+```
+
+3. Configure secrets:
+```bash
+kubectl apply -f tekton/secrets/secrets.yaml
+```
+
+### Pipeline Parameters
+
+| Parameter    | Description                    | Default |
+|-------------|--------------------------------|---------|
+| repo-url    | Git repository URL             | -       |
+| branch-name | Git branch to analyze          | main    |
+| path        | Files to analyze               | .       |
+| model       | LLM model to use              | gpt-4o  |
+| language    | Output language                | en      |
+| auto-apply  | Auto-apply fixes              | false   |
+| use-azure   | Use Azure OpenAI              | false   |
+
+### Example Pipeline Run
+
+```yaml
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: code-review-run
+spec:
+  pipelineRef:
+    name: ai-code-review-pipeline
+  params:
+    - name: repo-url
+      value: "https://github.com/your-org/your-repo.git"
+    - name: path
+      value: "src/*.py"
+    - name: auto-apply
+      value: "true"
+```
+
+For detailed CI setup instructions, see [tekton/README.md](tekton/README.md).
+
 ## License 📜
 MIT License - See [LICENSE](LICENSE) for details.
