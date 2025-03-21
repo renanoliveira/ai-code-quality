@@ -1,0 +1,32 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# VS Code
+.vscode/
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+
+# Unit tests / coverage
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+*.swp
+*.swo
