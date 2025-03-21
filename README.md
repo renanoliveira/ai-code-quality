@@ -541,3 +541,54 @@ ai-quality-ci/
 ## Licença 📜
 
 MIT License - Veja [LICENSE](LICENSE) para detalhes.
+
+### Correções Sugeridas
+
+Ao usar a opção `--show-fixes`, a ferramenta mostrará as correções sugeridas em um formato git-diff amigável:
+
+```diff
+Correção #1: Adicionar tipagem de parâmetros
+--- a/meu_arquivo.py
++++ b/meu_arquivo.py
+@@ -1,5 +1,5 @@
+-def processa_dados(dados):
+-    resultado = []
++def processa_dados(dados: List[Dict]) -> List[Dict]:
++    resultado: List[Dict] = []
+     for item in dados:
+         # processamento
+     return resultado
+```
+
+Para cada correção sugerida, você pode:
+1. Ver o título e descrição da correção
+2. Ver as alterações propostas em formato git-diff
+3. Escolher se deseja aplicar a correção
+4. Se aplicada, a correção será commitada automaticamente com uma mensagem descritiva
+
+### Opções de Formatação
+
+A ferramenta oferece dois modos de visualização:
+
+1. **Modo Padrão**: Saída em texto simples
+2. **Modo Human-Readable** (`--human-readable`): 
+   - Cores e ícones para melhor visualização
+   - Formatação rica para melhor legibilidade
+   - Diff colorido para correções sugeridas
+   - Confirmação interativa para aplicar correções
+
+### Aplicação de Correções
+
+Existem duas formas de aplicar correções:
+
+1. **Manual** (`--show-fixes`):
+   - Mostra cada correção individualmente
+   - Permite escolher quais correções aplicar
+   - Cria commits separados para cada correção
+
+2. **Automática** (`--auto-apply --show-fixes`):
+   - Mostra todas as correções
+   - Aplica todas as correções aprovadas
+   - Cria commits separados para cada correção
+
+> ⚠️ **Nota**: A opção `--auto-apply` só funciona em conjunto com `--show-fixes`

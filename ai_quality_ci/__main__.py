@@ -1,12 +1,14 @@
 import click
-from typing import List
+from typing import List, Dict
 import os
 from pathlib import Path
+import difflib
 from rich.console import Console
 from rich.panel import Panel
 from rich.markdown import Markdown
 from rich.syntax import Syntax
 from rich.table import Table
+from rich.prompt import Confirm
 from .code_analyzer import CodeAnalyzer
 from .ai_reviewer import AIReviewer
 from .github_client import GitHubClient
@@ -40,15 +42,37 @@ def find_python_files(path: str, recursive: bool = True) -> List[str]:
     
     return python_files
 
-def format_review_output(result: dict, file_path: str, show_fixes: bool = False, human_readable: bool = False) -> None:
-    """Format and display review output in a readable way.
+def generate_diff(original: str, modified: str, file_path: str) -> str:
+    """Generate a git-style diff between original and modified code."""
+    original_lines = original.splitlines(keepends=True)
+    modified_lines = modified.splitlines(keepends=True)
     
-    Args:
-        result: Dictionary with review results
-        file_path: Path to the analyzed file
-        show_fixes: Whether to show detailed code fixes
-        human_readable: Whether to use rich formatting for better readability
-    """
+    diff = difflib.unified_diff(
+        original_lines,
+        modified_lines,
+        fromfile=f'a/{file_path}',
+        tofile=f'b/{file_path}',
+        lineterm=''
+    )
+    return ''.join(diff)
+
+def apply_fix(file_path: str, original: str, modified: str, description: str) -> bool:
+    """Apply a fix to the file and create a commit."""
+    try:
+        # Write the modified content
+        with open(file_path, 'w') as f:
+            f.write(modified)
+        
+        # Create a commit
+        os.system(f'git add "{file_path}"')
+        os.system(f'git commit -m "fix: {description}"')
+        return True
+    except Exception as e:
+        console.print(f"[red]Erro ao aplicar correção: {str(e)}[/]")
+        return False
+
+def format_review_output(result: dict, file_path: str, show_fixes: bool = False, human_readable: bool = False) -> None:
+    """Format and display review output in a readable way."""
     if not human_readable:
         output = []
         # Add header
@@ -126,21 +150,38 @@ def format_review_output(result: dict, file_path: str, show_fixes: bool = False,
     if result.get('code_fixes'):
         if show_fixes:
             console.print("\n[bold yellow]🛠️  Correções Sugeridas[/]")
-            for fix in result['code_fixes']:
+            for i, fix in enumerate(result['code_fixes'], 1):
+                # Mostrar título da correção
                 console.print(Panel(
-                    f"[bold yellow]{fix['title']}[/]",
+                    f"[bold yellow]Correção #{i}: {fix['title']}[/]",
                     expand=False,
                     style="yellow"
                 ))
+                
                 if 'code' in fix:
+                    # Gerar e mostrar diff
+                    with open(file_path, 'r') as f:
+                        original_code = f.read()
+                    diff = generate_diff(original_code, fix['code'], file_path)
+                    
+                    console.print("\n[bold]Alterações propostas:[/]")
                     syntax = Syntax(
-                        fix['code'],
-                        "python",
+                        diff,
+                        "diff",
                         theme="monokai",
                         line_numbers=True,
                         word_wrap=True
                     )
                     console.print(syntax)
+                    
+                    # Perguntar se deseja aplicar a correção
+                    if Confirm.ask("\nDeseja aplicar esta correção?"):
+                        if apply_fix(file_path, original_code, fix['code'], fix['title']):
+                            console.print("[green]✓ Correção aplicada e commitada com sucesso![/]")
+                        else:
+                            console.print("[red]✗ Falha ao aplicar a correção.[/]")
+                    
+                    console.print("\n" + "─" * 80 + "\n")
         else:
             num_fixes = len(result['code_fixes'])
             console.print(f"\n[bold yellow]🛠️  Correções Sugeridas:[/] {num_fixes} correções disponíveis")
@@ -165,17 +206,14 @@ def cli():
 def review_files(paths: List[str], provider: str, model: str, language: str, 
                 auto_apply: bool, show_fixes: bool, human_readable: bool,
                 config: str, recursive: bool, ignore: List[str]):
-    """Review Python files or directories for code quality and suggest improvements.
-    
-    You can provide multiple files and/or directories. For directories, all Python
-    files within them will be analyzed (recursively by default).
-    
-    Examples:
-        ai-quality-ci review-files file.py
-        ai-quality-ci review-files src/
-        ai-quality-ci review-files src/ tests/ --no-recursive
-        ai-quality-ci review-files . --ignore "test_*.py" --ignore "setup.py"
-    """
+    """Review Python files or directories for code quality and suggest improvements."""
+    if auto_apply and not show_fixes:
+        if human_readable:
+            console.print("\n[bold red]⚠️  Para usar --auto-apply, você precisa usar --show-fixes também.[/]")
+        else:
+            click.echo("\n Para usar --auto-apply, você precisa usar --show-fixes também.")
+        return
+
     if auto_apply:
         if human_readable:
             console.print("\n[bold red]⚠️  ATENÇÃO:[/] Modo auto-apply ativado. As correções serão aplicadas automaticamente!")
