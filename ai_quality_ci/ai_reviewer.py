@@ -289,14 +289,24 @@ Remember to:
             str: Translated text
         """
         try:
-            response = openai.ChatCompletion.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are a professional translator. Translate the text exactly as requested, maintaining the key: value format."},
-                    {"role": "user", "content": text}
-                ],
-                temperature=0.3
-            )
+            if self.use_azure:
+                response = openai.ChatCompletion.create(
+                    deployment_id=self.model,
+                    messages=[
+                        {"role": "system", "content": "You are a professional translator. Translate the text exactly as requested, maintaining the key: value format."},
+                        {"role": "user", "content": text}
+                    ],
+                    temperature=0.3
+                )
+            else:
+                response = openai.ChatCompletion.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": "You are a professional translator. Translate the text exactly as requested, maintaining the key: value format."},
+                        {"role": "user", "content": text}
+                    ],
+                    temperature=0.3
+                )
             return response.choices[0].message.content
         except Exception as e:
             raise Exception(f"Translation failed: {str(e)}")
