@@ -1,65 +1,65 @@
 # AI Quality CI 🤖
 
-Ferramenta de análise de qualidade de código alimentada por IA, com suporte a múltiplos provedores de LLM e integração com GitHub.
+AI-powered code quality analysis tool with support for multiple LLM providers and GitHub integration.
 
-## Características ✨
+## Features ✨
 
-- 🧠 **Múltiplos Provedores de IA**
+- 🧠 **Multiple AI Providers**
   - OpenAI (GPT-4, GPT-3.5-turbo)
   - Azure OpenAI
   - Claude (claude-3-opus, claude-3-sonnet)
   - DeepSeek (deepseek-coder)
 
-- 🔍 **Análise de Código**
-  - Análise estática com Pylint
-  - Sugestões de melhoria por IA
-  - Correções automáticas
-  - Formatação de código
+- 🔍 **Code Analysis**
+  - Static analysis with Pylint
+  - AI-powered improvement suggestions
+  - Automatic fixes
+  - Code formatting
 
-- 🌟 **Integração GitHub**
-  - Análise de Pull Requests
-  - Comentários automáticos
-  - Criação de commits
-  - Sugestões de código
+- 🌟 **GitHub Integration**
+  - Pull Request analysis
+  - Automatic comments
+  - Commit creation
+  - Code suggestions
 
-- 💻 **Interface Amigável**
-  - Saída formatada com cores
-  - Diff no estilo git
-  - Aplicação interativa de correções
-  - Suporte a múltiplos idiomas
+- 💻 **User-Friendly Interface**
+  - Colored output
+  - Git-style diffs
+  - Interactive fix application
+  - Multi-language support
 
-## Instalação 📦
+## Installation 📦
 
 ```bash
 pip install ai-quality-ci
 ```
 
-## Configuração ⚙️
+## Configuration ⚙️
 
-### 1. Variáveis de Ambiente
+### 1. Environment Variables
 
-Configure as variáveis de ambiente necessárias:
+Set up the required environment variables:
 
 ```bash
 # OpenAI
-export OPENAI_API_KEY="sua-chave"
+export OPENAI_API_KEY="your-key"
 
 # Azure OpenAI
-export AZURE_OPENAI_KEY="sua-chave"
-export AZURE_OPENAI_ENDPOINT="seu-endpoint"
+export AZURE_OPENAI_KEY="your-key"
+export AZURE_OPENAI_ENDPOINT="your-endpoint"
 
 # GitHub
-export GITHUB_TOKEN="seu-token"
+export GITHUB_TOKEN="your-token"
 ```
 
-### 2. Arquivo de Configuração (Opcional)
+### 2. Configuration File (Optional)
 
-Crie um arquivo `config.yaml` para personalizar as configurações:
+Create a `config.yaml` file to customize settings:
 
 ```yaml
 provider:
-  name: openai  # ou azure, claude, deepseek
-  model: gpt-4  # modelo específico do provedor
+  name: openai  # or azure, claude, deepseek
+  model: gpt-4  # provider-specific model
   
 analysis:
   ignore_patterns:
@@ -68,122 +68,122 @@ analysis:
   pylint_config: "path/to/pylintrc"
 
 output:
-  language: pt-BR  # ou en, es
+  language: en  # or pt-BR, es
   human_readable: true
 ```
 
-## Uso 🚀
+## Usage 🚀
 
-### Análise de Arquivos
+### File Analysis
 
 ```bash
-# Analisar um arquivo
-ai-quality-ci review-files arquivo.py
+# Analyze a file
+ai-quality-ci review-files file.py
 
-# Analisar um diretório
+# Analyze a directory
 ai-quality-ci review-files src/
 
-# Ignorar arquivos específicos
+# Ignore specific files
 ai-quality-ci review-files . --ignore "test_*.py"
 
-# Saída formatada em português
-ai-quality-ci review-files src/ --language pt-BR --human-readable
+# Human-readable output
+ai-quality-ci review-files src/ --human-readable
 ```
 
-### Análise de Pull Requests
+### Pull Request Analysis
 
 ```bash
-# Analisar PR
-ai-quality-ci review-pr usuario/repo 123
+# Analyze PR
+ai-quality-ci review-pr username/repo 123
 
-# Analisar PR com modelo específico
-ai-quality-ci review-pr usuario/repo 123 --provider azure --model gpt-4
+# Analyze PR with specific model
+ai-quality-ci review-pr username/repo 123 --provider azure --model gpt-4
 ```
 
-## Opções 🎛️
+## Options 🎛️
 
-| Opção           | Descrição                                   | Padrão  |
-|-----------------|---------------------------------------------|---------|
-| --provider      | Provedor de IA                             | openai  |
-| --model         | Modelo de IA                               | gpt-4   |
-| --language      | Idioma da saída (en, pt-BR)               | en      |
-| --auto-apply    | Aplicar correções automaticamente          | false   |
-| --show-fixes    | Mostrar detalhes das correções sugeridas  | false   |
-| --human-readable| Usar formatação rica para melhor leitura   | false   |
-| --recursive     | Buscar arquivos recursivamente             | true    |
-| --ignore        | Padrões para ignorar (pode usar múltiplos) | -       |
-| --config        | Arquivo de configuração                    | -       |
+| Option          | Description                               | Default |
+|----------------|-------------------------------------------|---------|
+| --provider     | AI provider                               | openai  |
+| --model        | AI model                                  | gpt-4   |
+| --language     | Output language (en, pt-BR)               | en      |
+| --auto-apply   | Apply fixes automatically                 | false   |
+| --show-fixes   | Show suggested fix details                | false   |
+| --human-readable| Use rich formatting for better readability| false   |
+| --recursive    | Search files recursively                  | true    |
+| --ignore       | Patterns to ignore (can use multiple)     | -       |
+| --config       | Configuration file                        | -       |
 
-## Correções Sugeridas 🛠️
+## Suggested Fixes 🛠️
 
-Ao usar `--show-fixes`, a ferramenta mostra as correções em formato git-diff:
+When using `--show-fixes`, the tool shows corrections in git-diff format:
 
 ```diff
-Correção #1: Adicionar tipagem de parâmetros
---- a/arquivo.py
-+++ b/arquivo.py
+Fix #1: Add parameter typing
+--- a/file.py
++++ b/file.py
 @@ -1,5 +1,5 @@
--def processa_dados(dados):
--    resultado = []
-+def processa_dados(dados: List[Dict]) -> List[Dict]:
-+    resultado: List[Dict] = []
-     for item in dados:
-         # processamento
-     return resultado
+-def process_data(data):
+-    result = []
++def process_data(data: List[Dict]) -> List[Dict]:
++    result: List[Dict] = []
+     for item in data:
+         # processing
+     return result
 ```
 
-Para cada correção você pode:
-1. Ver o título e descrição
-2. Ver as alterações propostas
-3. Escolher aplicar ou não
-4. Gerar commit automaticamente
+For each fix you can:
+1. View title and description
+2. View proposed changes
+3. Choose to apply or not
+4. Generate commit automatically
 
-## Modos de Visualização 👀
+## Display Modes 👀
 
-1. **Modo Padrão**: Saída em texto simples
-2. **Modo Human-Readable** (`--human-readable`):
-   - Cores e ícones
-   - Formatação rica
-   - Diff colorido
-   - Interação amigável
+1. **Standard Mode**: Plain text output
+2. **Human-Readable Mode** (`--human-readable`):
+   - Colors and icons
+   - Rich formatting
+   - Colored diffs
+   - Friendly interaction
 
-## Aplicação de Correções ✅
+## Applying Fixes ✅
 
 1. **Manual** (`--show-fixes`):
-   - Escolha individual
-   - Commits separados
-   - Visualização prévia
+   - Individual choice
+   - Separate commits
+   - Preview changes
 
-2. **Automática** (`--auto-apply --show-fixes`):
-   - Todas as correções
-   - Confirmação prévia
-   - Commits automáticos
+2. **Automatic** (`--auto-apply --show-fixes`):
+   - All fixes
+   - Prior confirmation
+   - Automatic commits
 
-> ⚠️ **Nota**: `--auto-apply` requer `--show-fixes`
+> ⚠️ **Note**: `--auto-apply` requires `--show-fixes`
 
-## Desenvolvimento 🔧
+## Development 🔧
 
-### Ambiente
+### Environment
 
 ```bash
-# Clone o repositório
-git clone https://github.com/usuario/ai-quality-ci
+# Clone repository
+git clone https://github.com/username/ai-quality-ci
 cd ai-quality-ci
 
-# Instale em modo desenvolvimento
+# Install in development mode
 pip install -e ".[dev]"
 ```
 
-### Testes
+### Tests
 
 ```bash
-# Executar testes
+# Run tests
 pytest
 
-# Com cobertura
+# With coverage
 pytest --cov=ai_quality_ci
 ```
 
-## Licença 📜
+## License 📜
 
-MIT License - Veja [LICENSE](LICENSE) para detalhes.
+MIT License - See [LICENSE](LICENSE) for details.
