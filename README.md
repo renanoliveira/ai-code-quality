@@ -61,6 +61,11 @@ python -m ai_quality_ci review-files path/to/file.py
 | `--use-azure`  | Use Azure OpenAI                         | false       |
 | `--auto-apply` | Apply fixes automatically + commit        | false       |
 | `--language`   | Report language (en, pt-BR, es)          | en          |
+| `--show-fixes` | Show details of suggested fixes          | false       |
+| `--human-readable` | Use rich formatting for better readability | false       |
+| `--recursive`  | Search files recursively                 | true        |
+| `--ignore`     | Patterns to ignore (can use multiple)    | -           |
+| `--config`     | Configuration file                       | -           |
 
 ### Practical Examples:
 **1. Analysis with Azure OpenAI:**
@@ -85,6 +90,39 @@ python -m ai_quality_ci review-files \
   --model claude-3-sonnet \
   --language en \
   $(find . -name '*.py')
+```
+
+### Directory and File Filtering Examples
+```bash
+# Analyze a Python file
+ai-quality-ci review-files path/to/file.py
+
+# Analyze a directory (recursively)
+ai-quality-ci review-files src/
+
+# Analyze multiple files and directories
+ai-quality-ci review-files src/ tests/ file.py
+
+# Disable recursive search
+ai-quality-ci review-files src/ --no-recursive
+
+# Ignore specific files
+ai-quality-ci review-files . --ignore "test_*.py" --ignore "setup.py"
+
+# Specify provider and model
+ai-quality-ci review-files src/ --provider claude --model claude-3-opus
+
+# Output in Portuguese with rich formatting
+ai-quality-ci review-files src/ --language pt-BR --human-readable
+
+# Show details of suggested fixes
+ai-quality-ci review-files src/ --show-fixes
+
+# Auto-apply fixes
+ai-quality-ci review-files src/ --auto-apply
+
+# Use configuration file
+ai-quality-ci review-files src/ --config config.yaml
 ```
 
 ## Example Output 📄
@@ -244,3 +282,262 @@ For detailed CI setup instructions, see [tekton/README.md](tekton/README.md).
 
 ## License 📜
 MIT License - See [LICENSE](LICENSE) for details.
+
+# AI Quality CI 🤖
+
+Uma ferramenta de análise de código que combina análise estática com revisão de código alimentada por IA.
+
+## Recursos ✨
+
+- 🔍 Análise estática usando Pylint
+- 🤖 Suporte a múltiplos provedores de IA:
+  - OpenAI (GPT-4, GPT-3.5-turbo)
+  - Claude (claude-3-opus, claude-3-sonnet)
+  - DeepSeek (modelos deepseek-coder)
+- 🌐 Suporte a múltiplos idiomas (en, pt-BR)
+- 🔄 Integração com GitHub PRs
+- 🚀 Sugestões de código detalhadas
+- ⚡ Pipeline CI/CD com Tekton
+- 🛠️ Auto-aplicação de correções
+- ⚙️ Configuração flexível via YAML
+
+## Instalação 📦
+
+```bash
+# Instalação básica
+pip install ai-quality-ci
+
+# Com dependências de desenvolvimento
+pip install "ai-quality-ci[dev]"
+```
+
+## Configuração ⚙️
+
+### Variáveis de Ambiente
+
+Configure as variáveis de ambiente necessárias para os serviços que você planeja usar:
+
+```bash
+# Para OpenAI
+export OPENAI_API_KEY=sua_chave_openai
+
+# Para Azure OpenAI
+export AZURE_OPENAI_KEY=sua_chave_azure
+export AZURE_OPENAI_ENDPOINT=seu_endpoint_azure
+
+# Para Claude
+export ANTHROPIC_API_KEY=sua_chave_anthropic
+
+# Para DeepSeek
+export DEEPSEEK_API_KEY=sua_chave_deepseek
+
+# Para integração com GitHub
+export GITHUB_TOKEN=seu_token_github
+```
+
+### Arquivo de Configuração
+
+Você pode personalizar o comportamento da ferramenta usando um arquivo `config.yaml`:
+
+```yaml
+# config.yaml
+ai:
+  provider: openai  # openai, azure, claude, ou deepseek
+  model: gpt-4     # modelo específico do provedor
+  language: pt-BR  # idioma da saída
+
+analysis:
+  ignore_patterns:
+    - "test_*.py"
+    - "setup.py"
+  pylint_config: .pylintrc
+
+github:
+  auto_comment: true
+  comment_threshold: medium  # low, medium, high
+```
+
+## Uso 🚀
+
+### Análise de Arquivos Locais
+
+```bash
+# Analisar um arquivo Python
+ai-quality-ci review-files caminho/para/arquivo.py
+
+# Analisar um diretório (recursivamente)
+ai-quality-ci review-files src/
+
+# Analisar múltiplos arquivos e diretórios
+ai-quality-ci review-files src/ tests/ arquivo.py
+
+# Desativar busca recursiva
+ai-quality-ci review-files src/ --no-recursive
+
+# Ignorar arquivos específicos
+ai-quality-ci review-files . --ignore "test_*.py" --ignore "setup.py"
+
+# Especificar provedor e modelo
+ai-quality-ci review-files src/ --provider claude --model claude-3-opus
+
+# Saída em português com formatação rica
+ai-quality-ci review-files src/ --language pt-BR --human-readable
+
+# Ver detalhes das correções sugeridas
+ai-quality-ci review-files src/ --show-fixes
+
+# Auto-aplicar correções (use com cautela)
+ai-quality-ci review-files src/ --auto-apply
+
+# Usar arquivo de configuração
+ai-quality-ci review-files src/ --config config.yaml
+```
+
+### Análise de Pull Requests
+
+```bash
+# Analisar um PR específico
+ai-quality-ci review-pr dono/repositorio 123
+
+# Analisar PR com opções
+ai-quality-ci review-pr dono/repo 123 \
+    --provider claude \
+    --model claude-3-opus \
+    --language pt-BR \
+    --auto-apply
+```
+
+### Opções Disponíveis
+
+| Opção           | Descrição                                   | Padrão  |
+|-----------------|---------------------------------------------|---------|
+| --provider      | Provedor de IA                             | openai  |
+| --model         | Modelo de IA                               | gpt-4   |
+| --language      | Idioma da saída (en, pt-BR)               | en      |
+| --auto-apply    | Aplicar correções automaticamente          | false   |
+| --show-fixes    | Mostrar detalhes das correções sugeridas  | false   |
+| --human-readable| Usar formatação rica para melhor leitura   | false   |
+| --recursive     | Buscar arquivos recursivamente             | true    |
+| --ignore        | Padrões para ignorar (pode usar múltiplos) | -       |
+| --config        | Arquivo de configuração                    | -       |
+
+### Modelos Suportados
+
+#### OpenAI
+- gpt-4
+- gpt-3.5-turbo
+
+#### Claude
+- claude-3-opus
+- claude-3-sonnet
+
+#### DeepSeek
+- deepseek-coder-33b-instruct
+- deepseek-coder-6.7b-instruct
+
+## Integração CI/CD com Tekton 🔄
+
+### Instalação
+
+```bash
+# Instalar secrets
+kubectl apply -f tekton/secrets/secrets.yaml
+```
+
+### Parâmetros do Pipeline
+
+| Parâmetro    | Descrição                     | Padrão  |
+|--------------|-------------------------------|---------|
+| repo-url     | URL do repositório Git        | -       |
+| branch-name  | Branch para análise           | main    |
+| path         | Arquivos para análise         | .       |
+| provider     | Provedor de IA               | openai  |
+| model        | Modelo de IA                 | gpt-4   |
+| language     | Idioma da saída              | en      |
+| auto-apply   | Auto-aplicar correções       | false   |
+
+### Exemplo de Pipeline Run
+
+```yaml
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: code-review-run
+spec:
+  pipelineRef:
+    name: ai-code-review-pipeline
+  params:
+    - name: repo-url
+      value: "https://github.com/seu-org/seu-repo.git"
+    - name: path
+      value: "src/*.py"
+    - name: provider
+      value: "claude"
+    - name: model
+      value: "claude-3-opus"
+    - name: language
+      value: "pt-BR"
+    - name: auto-apply
+      value: "true"
+```
+
+Para instruções detalhadas de configuração do CI, veja [tekton/README.md](tekton/README.md).
+
+## Desenvolvimento 🛠️
+
+### Testes
+
+```bash
+# Instalar dependências de desenvolvimento
+pip install -e ".[dev]"
+
+# Executar testes
+pytest
+
+# Executar testes com cobertura
+pytest --cov=ai_quality_ci tests/
+
+# Formatar código
+black ai_quality_ci tests
+isort ai_quality_ci tests
+
+# Verificar tipos
+mypy ai_quality_ci
+```
+
+### Estrutura do Projeto
+
+```
+ai-quality-ci/
+├── ai_quality_ci/
+│   ├── __init__.py
+│   ├── __main__.py
+│   ├── ai_reviewer.py
+│   ├── code_analyzer.py
+│   ├── github_client.py
+│   └── providers/
+│       ├── __init__.py
+│       ├── base.py
+│       ├── openai.py
+│       ├── claude.py
+│       └── deepseek.py
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_ai_reviewer.py
+│   ├── test_code_analyzer.py
+│   ├── test_github_client.py
+│   └── test_providers/
+├── tekton/
+│   ├── pipelines/
+│   ├── tasks/
+│   └── secrets/
+├── README.md
+├── setup.py
+├── requirements.txt
+└── config.yaml
+```
+
+## Licença 📜
+
+MIT License - Veja [LICENSE](LICENSE) para detalhes.
