@@ -175,7 +175,7 @@ def format_review_output(result: dict, file_path: str, show_fixes: bool = False,
                     console.print(syntax)
                     
                     # Perguntar se deseja aplicar a correção
-                    if Confirm.ask("\nDeseja aplicar esta correção?"):
+                    if Confirm.ask("\nDeseja aplicar esta correção?", console=console):
                         if apply_fix(file_path, original_code, fix['code'], fix['title']):
                             console.print("[green]✓ Correção aplicada e commitada com sucesso![/]")
                         else:
@@ -262,7 +262,7 @@ def review_files(paths: List[str], provider: str, model: str, language: str,
             
         except Exception as e:
             if human_readable:
-                console.print(f"[red]❌ Erro ao analisar {file_path}: {str(e)}[/]", err=True)
+                console.print(f"[red]❌ Erro ao analisar {file_path}: {str(e)}[/]")
             else:
                 click.echo(f" Erro ao analisar {file_path}: {str(e)}", err=True)
 
