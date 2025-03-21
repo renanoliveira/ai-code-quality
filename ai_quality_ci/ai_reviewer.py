@@ -277,3 +277,26 @@ Remember to:
             if os.path.exists(backup_path):
                 os.system(f"mv {backup_path} {file_path}")
                 print("Restored original file from backup.")
+
+    def translate_text(self, text: str) -> str:
+        """
+        Translate text using the configured LLM.
+        
+        Args:
+            text (str): Text to translate
+            
+        Returns:
+            str: Translated text
+        """
+        try:
+            response = openai.ChatCompletion.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a professional translator. Translate the text exactly as requested, maintaining the key: value format."},
+                    {"role": "user", "content": text}
+                ],
+                temperature=0.3
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            raise Exception(f"Translation failed: {str(e)}")

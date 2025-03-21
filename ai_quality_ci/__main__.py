@@ -71,40 +71,77 @@ def apply_fix(file_path: str, original: str, modified: str, description: str) ->
         console.print(f"[red]Erro ao aplicar correção: {str(e)}[/]")
         return False
 
-def format_review_output(result: dict, file_path: str, show_fixes: bool = False, human_readable: bool = False) -> None:
-    """Format and display review output in a readable way."""
+def format_review_output(result: dict, file_path: str, show_fixes: bool = False, human_readable: bool = False, language: str = None, ai_reviewer: AIReviewer = None) -> None:
+    """Format the review output in a human-readable way."""
+    relative_path = os.path.relpath(file_path)
+
+    # Default messages in English
+    messages = {
+        'style_issues': '🔍 Style Issues',
+        'improvements': '💡 Suggested Improvements',
+        'documentation': '📚 Documentation',
+        'fixes': '🛠️  Suggested Fixes',
+        'available_fixes': 'fixes available',
+        'show_fixes': 'Use --show-fixes to see fix details',
+        'proposed_changes': 'Proposed changes:',
+        'apply_fix': 'Do you want to apply this fix?',
+        'fix_success': '✓ Fix applied and committed successfully!',
+        'fix_failure': '✗ Failed to apply fix.',
+        'files_found': 'Found {} Python files for analysis...'
+    }
+
+    # If language is specified and ai_reviewer is available, translate messages
+    if language and language.lower() != 'en' and ai_reviewer:
+        try:
+            translation_prompt = f"Translate these messages to {language}. Keep the same meaning but make it natural in the target language:\n"
+            for key, value in messages.items():
+                translation_prompt += f"{key}: {value}\n"
+            
+            translated = ai_reviewer.translate_text(translation_prompt)
+            if translated:
+                # Parse the translated response and update messages
+                for line in translated.split('\n'):
+                    if ':' in line:
+                        key, value = line.split(':', 1)
+                        key = key.strip()
+                        if key in messages:
+                            messages[key] = value.strip()
+        except Exception as e:
+            console.print(f"[yellow]Warning: Translation failed, using English: {str(e)}[/]")
+
+    # Plain text output
     if not human_readable:
         output = []
-        # Add header
-        output.append(f"\n {file_path}")
-        output.append("=" * (len(file_path) + 4))
-        
+        output.append(f"\n{messages['files_found'].format(1)}")
+        output.append(f"\n╭{'─' * (len(relative_path) + 2)}╮")
+        output.append(f"│ {relative_path} │")
+        output.append(f"╰{'─' * (len(relative_path) + 2)}╯\n")
+
         # Style issues
         if result.get('style_issues'):
-            output.append("\n Problemas de Estilo:")
+            output.append(f"\n{messages['style_issues']}:")
             for issue in result['style_issues']:
                 output.append(f"  • {issue}")
-        
+
         # Code improvements
         if result.get('code_improvements'):
-            output.append("\n Sugestões de Melhorias:")
+            output.append(f"\n{messages['improvements']}:")
             for improvement in result['code_improvements']:
                 output.append(f"  • {improvement}")
-        
+
         # Documentation
         if result.get('documentation'):
-            output.append("\n Documentação:")
+            output.append(f"\n{messages['documentation']}:")
             for doc in result['documentation']:
                 output.append(f"  • {doc}")
-        
+
         # Code fixes
         if result.get('code_fixes'):
             if show_fixes:
-                output.append("\n Correções Sugeridas:")
+                output.append(f"\n{messages['fixes']}:")
                 for fix in result['code_fixes']:
                     output.append(f"\n  {fix['title']}")
                     if 'code' in fix:
-                        # Format code block
                         code_lines = fix['code'].split('\n')
                         output.append("\n  ```python")
                         for line in code_lines:
@@ -112,9 +149,9 @@ def format_review_output(result: dict, file_path: str, show_fixes: bool = False,
                         output.append("  ```")
             else:
                 num_fixes = len(result['code_fixes'])
-                output.append(f"\n Correções Sugeridas: {num_fixes} correções disponíveis")
-                output.append("  Use --show-fixes para ver os detalhes das correções")
-        
+                output.append(f"\n{messages['fixes']}: {num_fixes} {messages['available_fixes']}")
+                output.append(f"  {messages['show_fixes']}")
+
         click.echo("\n".join(output))
         return
 
@@ -124,7 +161,7 @@ def format_review_output(result: dict, file_path: str, show_fixes: bool = False,
 
     # Style issues
     if result.get('style_issues'):
-        console.print("\n[bold red]🔍 Problemas de Estilo[/]")
+        console.print(f"\n[bold red]{messages['style_issues']}[/]")
         table = Table(show_header=False, show_edge=False, box=None)
         for issue in result['style_issues']:
             table.add_row("•", f"[yellow]{issue}[/]")
@@ -132,7 +169,7 @@ def format_review_output(result: dict, file_path: str, show_fixes: bool = False,
 
     # Code improvements
     if result.get('code_improvements'):
-        console.print("\n[bold green]💡 Sugestões de Melhorias[/]")
+        console.print(f"\n[bold green]{messages['improvements']}[/]")
         table = Table(show_header=False, show_edge=False, box=None)
         for improvement in result['code_improvements']:
             table.add_row("•", f"[cyan]{improvement}[/]")
@@ -140,7 +177,7 @@ def format_review_output(result: dict, file_path: str, show_fixes: bool = False,
 
     # Documentation
     if result.get('documentation'):
-        console.print("\n[bold magenta]📚 Documentação[/]")
+        console.print(f"\n[bold magenta]{messages['documentation']}[/]")
         table = Table(show_header=False, show_edge=False, box=None)
         for doc in result['documentation']:
             table.add_row("•", f"[magenta]{doc}[/]")
@@ -149,22 +186,20 @@ def format_review_output(result: dict, file_path: str, show_fixes: bool = False,
     # Code fixes
     if result.get('code_fixes'):
         if show_fixes:
-            console.print("\n[bold yellow]🛠️  Correções Sugeridas[/]")
+            console.print(f"\n[bold yellow]{messages['fixes']}[/]")
             for i, fix in enumerate(result['code_fixes'], 1):
-                # Mostrar título da correção
                 console.print(Panel(
-                    f"[bold yellow]Correção #{i}: {fix['title']}[/]",
+                    f"[bold yellow]Fix #{i}: {fix['title']}[/]",
                     expand=False,
                     style="yellow"
                 ))
                 
                 if 'code' in fix:
-                    # Gerar e mostrar diff
                     with open(file_path, 'r') as f:
                         original_code = f.read()
                     diff = generate_diff(original_code, fix['code'], file_path)
                     
-                    console.print("\n[bold]Alterações propostas:[/]")
+                    console.print(f"\n[bold]{messages['proposed_changes']}[/]")
                     syntax = Syntax(
                         diff,
                         "diff",
@@ -174,18 +209,17 @@ def format_review_output(result: dict, file_path: str, show_fixes: bool = False,
                     )
                     console.print(syntax)
                     
-                    # Perguntar se deseja aplicar a correção
-                    if Confirm.ask("\nDeseja aplicar esta correção?", console=console):
+                    if Confirm.ask(f"\n{messages['apply_fix']}?", console=console):
                         if apply_fix(file_path, original_code, fix['code'], fix['title']):
-                            console.print("[green]✓ Correção aplicada e commitada com sucesso![/]")
+                            console.print(f"[green]{messages['fix_success']}[/]")
                         else:
-                            console.print("[red]✗ Falha ao aplicar a correção.[/]")
+                            console.print(f"[red]{messages['fix_failure']}[/]")
                     
                     console.print("\n" + "─" * 80 + "\n")
         else:
             num_fixes = len(result['code_fixes'])
-            console.print(f"\n[bold yellow]🛠️  Correções Sugeridas:[/] {num_fixes} correções disponíveis")
-            console.print("[dim]Use --show-fixes para ver os detalhes das correções[/]")
+            console.print(f"\n[bold yellow]{messages['fixes']}: {num_fixes} {messages['available_fixes']}[/]")
+            console.print(f"  {messages['show_fixes']}")
 
 @click.group()
 def cli():
@@ -196,7 +230,7 @@ def cli():
 @click.argument('paths', nargs=-1, type=click.Path(exists=True))
 @click.option('--provider', default='openai', help='AI provider to use')
 @click.option('--model', default='gpt-4', help='AI model to use')
-@click.option('--language', default='en', help='Output language')
+@click.option('--language', '-l', default='en', help='Language for output messages (e.g., en, pt, es)')
 @click.option('--auto-apply', is_flag=True, default=False, help='[CUIDADO] Aplicar correções automaticamente (use com cautela)')
 @click.option('--show-fixes', is_flag=True, help='Mostrar detalhes das correções sugeridas')
 @click.option('--human-readable', is_flag=True, help='Usar formatação rica para melhor legibilidade')
@@ -258,7 +292,7 @@ def review_files(paths: List[str], provider: str, model: str, language: str,
             result = reviewer.review(file_path, analysis, auto_apply=auto_apply)
             
             # Format and display results
-            format_review_output(result, relative_path, show_fixes=show_fixes, human_readable=human_readable)
+            format_review_output(result, relative_path, show_fixes=show_fixes, human_readable=human_readable, language=language, ai_reviewer=reviewer)
             
         except Exception as e:
             if human_readable:
