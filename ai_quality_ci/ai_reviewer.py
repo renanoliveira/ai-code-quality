@@ -6,11 +6,19 @@ from typing import Dict, Optional, List
 import openai
 
 class AIReviewer:
-    """AI code reviewer using OpenAI's GPT models"""
-
-    def __init__(self, model: str = "gpt-4o", use_azure: bool = False):
-        """Initialize the AI reviewer"""
+    """AI-powered code reviewer using GPT models."""
+    
+    def __init__(self, model: str = "gpt-4o", use_azure: bool = False, language: str = "en"):
+        """Initialize AI reviewer.
+        
+        Args:
+            model: Model to use for review
+            use_azure: Whether to use Azure OpenAI
+            language: Output language (e.g., 'en', 'pt-BR')
+        """
         self.model = model
+        self.use_azure = use_azure
+        self.language = language
         
         if use_azure:
             openai.api_type = "azure"
@@ -22,7 +30,7 @@ class AIReviewer:
             openai.api_base = "https://api.openai.com/v1"
             openai.api_key = os.getenv("OPENAI_API_KEY")
 
-    def review(self, file_path: str, analysis_results: Dict, auto_apply: bool = False, language: str = 'pt-BR') -> Dict:
+    def review(self, file_path: str, analysis_results: Dict, auto_apply: bool = False) -> Dict:
         """
         Review code using GPT model
         
@@ -30,10 +38,9 @@ class AIReviewer:
             file_path: Path to the file to review
             analysis_results: Results from static analysis
             auto_apply: If True, automatically apply suggested fixes and create a commit
-            language: Language for output (default is Portuguese)
         """
         # Prepare the prompt
-        prompt = self._prepare_prompt(file_path, analysis_results, language)
+        prompt = self._prepare_prompt(file_path, analysis_results, self.language)
         
         try:
             # Create chat completion
